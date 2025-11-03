@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>解压我的20岁（含彩蛋）</title>
+    <style>
+        /* 页面整体样式 */
+        body {
+            background-color: #ffe6f2; /* 淡粉色背景 */
+            font-family: "Arial Rounded MT Bold", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* 防止滚动条出现 */
+        }
+
+        /* 解压容器 */
+        .unzip-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #ff69b4; /* 粉色边框 */
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
+            z-index: 1; /* 确保在背景之上 */
+        }
+
+        /* 标题样式 */
+        .unzip-title {
+            color: #d93b80; /* 深粉色文字 */
+            margin-bottom: 25px;
+        }
+
+        /* 文件列表 */
+        .file-list {
+            text-align: left;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 8px 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .file-item input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: #ff1493; /* 粉色复选框 */
+        }
+
+        /* 进度条样式 */
+        .progress-container {
+            margin: 25px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ffd1dc; /* 浅粉色进度条背景 */
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #ff1493; /* 亮粉色进度 */
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .start-btn, .cancel-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .start-btn {
+            background-color: #ff1493; /* 亮粉色按钮 */
+            color: white;
+        }
+
+        .start-btn:hover {
+            background-color: #d93b80; /* 按钮 hover 效果 */
+            transform: scale(1.05);
+        }
+
+        .cancel-btn {
+            background-color: #ffc0cb; /* 浅粉色按钮 */
+            color: #d93b80; /* 深粉色文字 */
+        }
+
+        .cancel-btn:hover {
+            background-color: #ffafcc;
+        }
+
+        /* 注入爱意弹窗样式 */
+        .love-injection-modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 183, 197, 0.5); /* 半透明粉色背景 */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .love-injection-modal .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #ff1493;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.4);
+        }
+
+        .love-injection-modal .modal-title {
+            color: #d93b80;
+            margin-bottom: 20px;
+        }
+
+        .love-progress-container {
+            margin: 20px 0;
+        }
+
+        .love-progress-bar {
+            width: 100%;
+            height: 25px;
+            background-color: #ffd1dc;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .love-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff69b4, #ff1493); /* 渐变色进度 */
+            border-radius: 15px;
+            transition: width 0.3s ease;
+        }
+
+        .inject-btn {
+            background-color: #ff1493;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px; /* 圆形按钮 */
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 15px 0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 #d93b80;
+        }
+
+        .inject-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #d93b80;
+        }
+
+        .close-modal-btn {
+            background-color: transparent;
+            color: #d93b80;
+            border: 2px solid #d93b80;
+            padding: 8px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .close-modal-btn:hover {
+            background-color: #ffe6f2;
+        }
+
+        /* 解压成功页面样式 */
+        .success-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff99cc, #ff66b2);
+            z-index: 100; /* 确保在最上层 */
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+        }
+
+        .success-content {
+            position: relative;
+            z-index: 2;
+            padding: 40px;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .success-title {
+            font-size: 48px;
+            margin-bottom: 30px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .birthday-wish {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            font-weight: lighter;
+        }
+
+        .gifts {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .gift-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            transform: rotate(-5deg);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .gift-box:nth-child(2) {
+            transform: rotate(5deg);
+            animation-delay: 1s;
+        }
+
+        .gift-box:nth-child(3) {
+            transform: rotate(-3deg);
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-15px) rotate(-5deg); }
+        }
+
+        .celebrate-btn {
+            background-color: white;
+            color: #ff66b2;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .celebrate-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 欢迎来到20岁弹窗样式 */
+        .welcome-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 183, 197, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .welcome-modal .modal-content {
+            background: linear-gradient(135deg, #ff66b2, #ff99cc);
+            padding: 40px;
+            border-radius: 25px;
+            border: 4px solid white;
+            width: 80%;
+            max-width: 450px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 50px rgba(255, 105, 180, 0.6);
+            animation: popIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .welcome-title {
+            font-size: 42px;
+            margin-bottom: 20px;
+            text-shadow: 0 3px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .welcome-date {
+            font-size: 20px;
+            margin-bottom: 30px;
+            font-weight: lighter;
+            opacity: 0.9;
+        }
+
+        .welcome-message {
+            font-size: 24px;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .enter-btn {
+            background-color: white;
+            color: #ff66b2;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 #ffb3d9;
+        }
+
+        .enter-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #ffb3d9;
+        }
+
+        /* 彩蛋弹窗样式 */
+        .easter-egg-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 183, 197, 0.7);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .easter-egg-modal .modal-content {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 25px;
+            border: 4px solid #ff66b2;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            color: #d93b80;
+            box-shadow: 0 0 50px rgba(255, 105, 180, 0.7);
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .easter-egg-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ff1493;
+        }
+
+        .easter-egg-message {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .easter-egg-btn {
+            background-color: #ff1493;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .easter-egg-btn:hover {
+            transform: scale(1.05);
+            background-color: #d93b80;
+        }
+    </style>
+</head>
+<body>
+    <!-- 解压确认页面 -->
+    <div class="unzip-container">
+        <h2 class="unzip-title">🎂 我的20岁 · 解压确认 🎂</h2>
+        
+        <!-- 文件列表 -->
+        <div class="file-list">
+            <div class="file-item">
+                <input type="checkbox" id="file1" checked>
+                <label for="file1">19岁的成长与收获.zip</label>
+            </div>
+            <div class="file-item">
+                <input type="checkbox" id="file2" checked>
+                <label for="file2">20岁的勇气与梦想.rar</label>
+            </div>
+            <div class="file-item">
+                <input type="checkbox" id="file3" checked>
+                <label for="file3">家人朋友的祝福.mp4</label>
+            </div>
+            <div class="file-item">
+                <input type="checkbox" id="file4" checked>
+                <label for="file4">未来的无限可能.txt</label>
+            </div>
+        </div>
+
+        <!-- 解压进度条 -->
+        <div class="progress-container">
+            <p>解压进度:</p>
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="button-group">
+            <button class="start-btn" onclick="startUnzipping()">开始解压我的20岁</button>
+            <button class="cancel-btn" onclick="alert('解压已取消，美好的20岁已为你保存。')">取消</button>
+        </div>
+    </div>
+
+    <!-- 注入爱意弹窗 (默认隐藏) -->
+    <div class="love-injection-modal" id="loveModal" style="display: none;">
+        <div class="modal-content">
+            <h2 class="modal-title">💖 请注入爱意以解锁 💖</h2>
+            <p>20岁的礼物需要满满的爱意才能打开哦！</p>
+            
+            <div class="love-progress-container">
+                <p>爱意能量:</p>
+                <div class="love-progress-bar">
+                    <div class="love-progress" id="loveProgress"></div>
+                </div>
+            </div>
+
+            <button class="inject-btn" onclick="injectLove()">注入爱意</button>
+            <button class="close-modal-btn" onclick="closeLoveModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 解压成功庆祝页面 (默认隐藏) -->
+    <div class="success-container" id="successPage" style="display: none;">
+        <div class="success-content">
+            <h1 class="success-title">🎉 解压完成！ 🎉</h1>
+            <div class="birthday-wish">
+                <p>亲爱的，20岁生日快乐！</p>
+                <p>愿你被世界温柔以待，</p>
+                <p>勇敢地去爱，去闯，去闪闪发光！</p>
+            </div>
+            <div class="gifts">
+                <div class="gift-box">
+                    <span>勇气 + 1</span>
+                </div>
+                <div class="gift-box">
+                    <span>快乐 + 1</span>
+                </div>
+                <div class="gift-box">
+                    <span>幸运 + 1</span>
+                </div>
+            </div>
+            <button class="celebrate-btn" onclick="showWelcomeModal()">开始庆祝！</button>
+        </div>
+    </div>
+
+    <!-- 欢迎来到20岁弹窗 (默认隐藏) -->
+    <div class="welcome-modal" id="welcomeModal" style="display: none;">
+        <div class="modal-content">
+            <h2 class="welcome-title">欢迎来到20岁</h2>
+            <div class="welcome-date" id="welcomeDate"></div>
+            <div class="welcome-message">
+                <p>愿你在这里</p>
+                <p>收获爱与被爱</p>
+            </div>
+            <button class="enter-btn" onclick="closeWelcomeModal()">进入新旅程</button>
+        </div>
+    </div>
+
+    <!-- 彩蛋弹窗 (默认隐藏) -->
+    <div class="easter-egg-modal" id="easterEggModal" style="display: none;">
+        <div class="modal-content">
+            <h2 class="easter-egg-title">✨ 恭喜你发现彩蛋！ ✨</h2>
+            <div class="easter-egg-message">
+                <p>这是一个藏在代码里的小小惊喜，</p>
+                <p>希望你的20岁像这个彩蛋一样，</p>
+                <p>充满意想不到的快乐和美好！</p>
+            </div>
+            <button class="easter-egg-btn" onclick="closeEasterEggModal()">收下这份祝福</button>
+        </div>
+    </div>
+
+    <script>
+        let unzipInterval; // 保存解压进度条的定时器
+
+        // 开始解压函数
+        function startUnzipping() {
+            const progressBar = document.getElementById('progress');
+            const startBtn = document.querySelector('.start-btn');
+            const cancelBtn = document.querySelector('.cancel-btn');
+            const loveModal = document.getElementById('loveModal');
+            
+            // 禁用按钮
+            startBtn.disabled = true;
+            cancelBtn.disabled = true;
+            startBtn.textContent = "验证中...";
+
+            // 模拟初始解压，到20%时暂停，要求注入爱意
+            let progress = 0;
+            unzipInterval = setInterval(() => {
+                progress += 2;
+                progressBar.style.width = progress + '%';
+
+                if (progress >= 20) {
+                    clearInterval(unzipInterval);
+                    startBtn.textContent = "等待爱意注入...";
+                    // 显示注入爱意弹窗
+                    loveModal.style.display = 'flex';
+                }
+            }, 100);
+        }
+
+        // 注入爱意函数
+        function injectLove() {
+            const loveProgress = document.getElementById('loveProgress');
+            const currentWidth = parseInt(loveProgress.style.width) || 0;
+            const newWidth = Math.min(currentWidth + 10, 100); // 每次增加10%，最多到100%
+            loveProgress.style.width = newWidth + '%';
+
+            // 爱意充满后，继续解压
+            if (newWidth >= 100) {
+                setTimeout(() => {
+                    closeLoveModal(); // 关闭弹窗
+                    continueUnzipping(); // 继续解压剩余进度
+                }, 800); // 延迟一点时间，让用户看到满格效果
+            }
+        }
+
+        // 关闭爱意弹窗
+        function closeLoveModal() {
+            const loveModal = document.getElementById('loveModal');
+            loveModal.style.display = 'none';
+            // 重置爱意进度条
+            document.getElementById('loveProgress').style.width = '0%';
+            // 恢复按钮状态
+            const startBtn = document.querySelector('.start-btn');
+            const cancelBtn = document.querySelector('.cancel-btn');
+            startBtn.disabled = false;
+            cancelBtn.disabled = false;
+            startBtn.textContent = "开始解压我的20岁";
+        }
+
+        // 继续解压剩余进度
+        function continueUnzipping() {
+            const progressBar = document.getElementById('progress');
+            const startBtn = document.querySelector('.start-btn');
+            startBtn.textContent = "解压中...";
+
+            let progress = 20; // 从20%继续
+            unzipInterval = setInterval(() => {
+                progress += 4;
+                progressBar.style.width = progress + '%';
+
+                if (progress >= 100) {
+                    clearInterval(unzipInterval);
+                    setTimeout(() => {
+                        showSuccessPage(); // 显示解压成功页面
+                    }, 500);
+                }
+            }, 150);
+        }
+
+        // 显示解压成功页面
+        function showSuccessPage() {
+            const unzipContainer = document.querySelector('.unzip-container');
+            const successPage = document.getElementById('successPage');
+            
+            // 隐藏解压确认页面
+            unzipContainer.style.display = 'none';
+            // 显示庆祝页面
+            successPage.style.display = 'flex';
+        }
+
+        // 显示欢迎弹窗
+        function showWelcomeModal() {
+            const successPage = document.getElementById('successPage');
+            const welcomeModal = document.getElementById('welcomeModal');
+            const welcomeDate = document.getElementById('welcomeDate');
+            
+            // 隐藏庆祝页面
+            successPage.style.display = 'none';
+            
+            // 获取当前日期并格式化
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            welcomeDate.textContent = now.toLocaleDateString('zh-CN', options);
+            
+            // 显示欢迎弹窗
+            setTimeout(() => {
+                welcomeModal.style.display = 'flex';
+            }, 300);
+        }
+
+        // 关闭欢迎弹窗
+        function closeWelcomeModal() {
+            const welcomeModal = document.getElementById('welcomeModal');
+            welcomeModal.style.display = 'none';
+            // 弹窗关闭后，延迟5秒显示彩蛋
+            setTimeout(() => {
+                showEasterEggModal();
+            }, 5000); // 5000毫秒 = 5秒
+        }
+
+        // 显示彩蛋弹窗
+        function showEasterEggModal() {
+            const easterEggModal = document.getElementById('easterEggModal');
+            easterEggModal.style.display = 'flex';
+        }
+
+        // 关闭彩蛋弹窗
+        function closeEasterEggModal() {
+            const easterEggModal = document.getElementById('easterEggModal');
+            easterEggModal.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
